@@ -161,4 +161,28 @@ def list_projects():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Wenn wir im Debug-Modus sind (lokal) oder nicht auf Render, starte einfach so
+    if os.environ.get("FLASK_ENV") == "development" or not os.environ.get("RENDER"):
+        app.run(debug=True)
+    else:
+        # Dies wird von Render nach dem Build-Prozess ausgeführt
+        # Wir erwarten, dass Gunicorn jetzt im PATH verfügbar ist
+        # durch den Symlink, den wir in build.sh erstellt haben.
+        import subprocess
+        import sys
+        
+        gunicorn_command = [
+            "gunicorn", # Gunicorn sollte jetzt direkt im PATH sein durch Symlink
+            "app:app",  # app.py:Flask-App-Objekt-Name
+            "--bind", "0.0.0.0:" + os.environ.get("PORT", "5000"), # Bindet an Renders Port
+            "--workers", "1", # Kann auf mehrere Worker erhöht werden, 1 ist Standard für kleine Apps
+            "--timeout", "120" # Erhöht das Timeout für KI-Verarbeitung
+        ]
+
+        print(f"Starte Gunicorn mit Befehl: {' '.join(gunicorn_command)}")
+        try:
+            # Führt den Gunicorn-Befehl als Subprozess aus
+            subprocess.run(gunicorn_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Fehler beim Starten von Gunicorn: {e}")
+            sys.exit(1)
