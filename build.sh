@@ -8,6 +8,6 @@ echo "--- Installiere uv ---"
 pip install uv
 
 echo "--- Installiere Python-Abhängigkeiten mit uv ---"
-uv pip install -r requirements.txt --system
+uv pip install -r requirements.txt --system --no-binary Pillow
 
 echo "--- Build-Prozess abgeschlossen ---"
